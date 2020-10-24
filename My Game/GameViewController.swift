@@ -9,12 +9,28 @@ import SceneKit
 
 class GameViewController: UIViewController {
     
+    // MARK: - Outlets
+    let label = UILabel()
+    
     // MARK: - Properties
     var ship: SCNNode!
-    var score = 0
+    var score = 0 {
+        didSet {
+            label.text = "Score: \(score)"
+        }
+    }
     var duration: TimeInterval = 5
     
     // MARK: - Methods
+    
+    func addLabel() {
+        label.frame = CGRect(x: 0, y: 0, width: scnView.frame.width, height: 100)
+        label.font = UIFont.systemFont(ofSize: 30)
+        label.numberOfLines = 2 
+        label.textAlignment = .center
+        scnView.addSubview(label)
+        score = 0
+    }
     
     func addShip() {
         // move ship father from view
@@ -31,11 +47,10 @@ class GameViewController: UIViewController {
         ship.runAction(.move(to: SCNVector3(), duration: duration)) {
             self.ship.removeFromParentNode()
             
-            print(#line, #function, "Game over")
+            DispatchQueue.main.async {
+                self.label.text = "Game over\nScore: \(self.score)"
+            }
         }
-        
-        // retrieve the SCNView
-        let scnView = self.view as! SCNView
         
         // add ship to the scene
         scnView.scene?.rootNode.addChildNode(ship)
@@ -52,9 +67,6 @@ class GameViewController: UIViewController {
     }
     
     func removeShip() {
-        // retrieve the SCNView
-        let scnView = self.view as! SCNView
-        
         // removw the ship
         scnView.scene?.rootNode.childNode(withName: "ship", recursively: true)?.removeFromParentNode()
     }
@@ -96,9 +108,6 @@ class GameViewController: UIViewController {
         // animate the 3d object
 //        ship.runAction(SCNAction.repeatForever(SCNAction.rotateBy(x: 0, y: 2, z: 0, duration: 1)))
         
-        // retrieve the SCNView
-        let scnView = self.view as! SCNView
-        
         // set the scene to the view
         scnView.scene = scene
         
@@ -123,13 +132,13 @@ class GameViewController: UIViewController {
         
         // Add ship
         addShip()
+        
+        // Add label
+        addLabel()
     }
     
     @objc
     func handleTap(_ gestureRecognize: UIGestureRecognizer) {
-        // retrieve the SCNView
-        let scnView = self.view as! SCNView
-        
         // check what nodes are tapped
         let p = gestureRecognize.location(in: scnView)
         let hitResults = scnView.hitTest(p, options: [:])
@@ -161,6 +170,11 @@ class GameViewController: UIViewController {
             
             SCNTransaction.commit()
         }
+    }
+    
+    // MARK: - Computer Properties
+    var scnView: SCNView {
+        self.view as! SCNView
     }
     
     override var shouldAutorotate: Bool {
